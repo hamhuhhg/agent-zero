@@ -1,4 +1,6 @@
 @echo off
+echo IMPORTANT: If you are facing issues, please delete the 'venv' folder and run this script again.
+echo.
 echo Creating virtual environment...
 IF NOT EXIST venv (
     python -m venv venv
@@ -8,7 +10,7 @@ echo Activating virtual environment...
 call venv\Scripts\activate
 
 echo Installing dependencies...
-pip install -r requirements.txt
+pip install --upgrade -r requirements.txt
 
 echo Preparing application...
 python prepare.py
