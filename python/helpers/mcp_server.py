@@ -306,7 +306,7 @@ class DynamicMcpProxy:
                 server=mcp_server,
                 message_path=mcp_server.settings.message_path,
                 sse_path=mcp_server.settings.sse_path,
-                auth_server_provider=mcp_server._auth_server_provider,
+                auth_server_provider=None,
                 auth_settings=mcp_server.settings.auth,
                 debug=mcp_server.settings.debug,
                 routes=mcp_server._additional_http_routes,
@@ -317,7 +317,7 @@ class DynamicMcpProxy:
             # doesn't work properly in our Flask/Werkzeug environment
             self.http_app = self._create_custom_http_app(
                 http_path,
-                mcp_server._auth_server_provider,
+                None,
                 mcp_server.settings.auth,
                 mcp_server.settings.debug,
                 mcp_server._additional_http_routes,
@@ -358,13 +358,13 @@ class DynamicMcpProxy:
             if self.http_session_manager:
                 await self.http_session_manager.handle_request(scope, receive, send)
 
-        # Get auth middleware and routes
-        auth_middleware, auth_routes, required_scopes = setup_auth_middleware_and_routes(
-            auth_server_provider, auth_settings
-        )
-
-        server_routes.extend(auth_routes)
-        server_middleware.extend(auth_middleware)
+        # Get auth middleware and routes (only if provider is present)
+        if auth_server_provider:
+            auth_middleware, auth_routes, required_scopes = setup_auth_middleware_and_routes(
+                auth_server_provider, auth_settings
+            )
+            server_routes.extend(auth_routes)
+            server_middleware.extend(auth_middleware)
 
         # Add StreamableHTTP routes with or without auth
         if auth_server_provider:
