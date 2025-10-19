@@ -307,7 +307,7 @@ class DynamicMcpProxy:
                 message_path=mcp_server.settings.message_path,
                 sse_path=mcp_server.settings.sse_path,
                 auth_server_provider=None,
-                auth_settings=mcp_server.settings.auth,
+                auth_settings=None,
                 debug=mcp_server.settings.debug,
                 routes=mcp_server._additional_http_routes,
                 middleware=[Middleware(BaseHTTPMiddleware, dispatch=mcp_middleware)],
@@ -318,7 +318,7 @@ class DynamicMcpProxy:
             self.http_app = self._create_custom_http_app(
                 http_path,
                 None,
-                mcp_server.settings.auth,
+                None,
                 mcp_server.settings.debug,
                 mcp_server._additional_http_routes,
             )
