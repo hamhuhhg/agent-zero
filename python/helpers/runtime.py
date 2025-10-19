@@ -79,24 +79,32 @@ async def call_development_function(func: Callable[..., Awaitable[T]], *args, **
 async def call_development_function(func: Callable[..., T], *args, **kwargs) -> T: ...
 
 async def call_development_function(func: Union[Callable[..., T], Callable[..., Awaitable[T]]], *args, **kwargs) -> T:
+    # In development, prefer RFC if configured, otherwise call locally.
     if is_development():
-        url = _get_rfc_url()
-        password = _get_rfc_password()
-        module = files.deabsolute_path(func.__code__.co_filename).replace("/", ".").removesuffix(".py") # __module__ is not reliable
-        result = await rfc.call_rfc(
-            url=url,
-            password=password,
-            module=module,
-            function_name=func.__name__,
-            args=list(args),
-            kwargs=kwargs,
-        )
-        return cast(T, result)
+        try:
+            url = _get_rfc_url()
+            password = _get_rfc_password()
+            module = files.deabsolute_path(func.__code__.co_filename).replace("/", ".").removesuffix(".py")  # __module__ is not reliable
+            result = await rfc.call_rfc(
+                url=url,
+                password=password,
+                module=module,
+                function_name=func.__name__,
+                args=list(args),
+                kwargs=kwargs,
+            )
+            return cast(T, result)
+        except Exception:
+            # Fallback to local execution when RFC is not available/misconfigured
+            if inspect.iscoroutinefunction(func):
+                return await func(*args, **kwargs)
+            else:
+                return func(*args, **kwargs)  # type: ignore
     else:
         if inspect.iscoroutinefunction(func):
             return await func(*args, **kwargs)
         else:
-            return func(*args, **kwargs) # type: ignore
+            return func(*args, **kwargs)  # type: ignore
 
 
 async def handle_rfc(rfc_call: rfc.RFCCall):
